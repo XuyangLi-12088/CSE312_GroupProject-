@@ -3,8 +3,33 @@ body {
     background-color: #0f1012;
     /* or maybe rgb(40,44,52) */
     font-family: 'DM Mono', monospace;
+    color: #a6d854;
 }
 
-p {
-    color: #a6d854
+.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -moz-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    color: #a6d854;
+    text-align: center;
+}
+
+.font {
+    font-family: 'DM Mono', monospace;
+    color: #a6d854;
+}
+
+.input{
+    font-size: 15px;
+    color: #555;
+    line-height: 1.2;
+    display: block;
+    width: 100%;
+    height: 45px;
+    background: 0 0;
+    border: 5px;
+    padding: 0 5px;
 }
