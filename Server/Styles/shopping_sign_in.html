@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Shopping Web Page - Not Signed In</title>
+        <title>Shopping Web Page - Signed In</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     </head>
     
@@ -16,7 +16,7 @@
         <!-- Format of the Navigation bar on the top of the shopping Web site -->
         <nav class="navbar navbar-expand-lg bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="http://localhost:8080/">Shopping</a>
+                <a class="navbar-brand" href="http://localhost:8080/signed_in/<username>">Shopping</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -27,18 +27,16 @@
                               Post
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="http://localhost:8080/login">Post Item</a></li>
-                                <li><a class="dropdown-item" href="http://localhost:8080/login">Post Auction</a></li>
+                                <li><a class="dropdown-item" href="http://localhost:8080/post">Post Item</a></li>
+                                <li><a class="dropdown-item" href="http://localhost:8080/auction">Post Auction</a></li>
                             </ul>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="http://localhost:8080/login">Shopping Cart</a>
+                            <a class="nav-link" href="http://localhost:8080/shop_cart/<username>">Shopping Cart</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="http://localhost:8080/login">LogIn</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="http://localhost:8080/sign_up">Sign Up</a>
+                            <!-- "Username:______" should redirect user to their own user account page -->
+                            <a class="nav-link" href="http://localhost:8080//account/<username>">Username:</a>
                         </li>
                     </ul>
                 </div>
@@ -59,7 +57,7 @@
             </div>
             <div class="card-body">
                 <p class="price">Price: $</p>
-                <form action="http://localhost:8080/login" method="post">
+                <form action="http://localhost:8080/signed_in/<username>" method="post">
                     <input class="btn btn-primary" type="submit" value="Add to Cart">
                 </form>
             </div>
