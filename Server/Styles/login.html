@@ -1,21 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <title>New Site</title>
+    <title>Login</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
 </head>
+
 <body>
-<div class="center">
-    <link rel="stylesheet" type="text/css" href="Background.css"/>
-    <h1>Login</h1>
-    <br>
-    <form action="http://localhost:8080/login" method="post">
-        <input class="input font" type="text" placeholder="Username" name="username">
-        <input class="input font" type="password" placeholder="Password" name="password">
-        <input class="btn btn-default" type="submit" value="Login">
-    </form>
-</div>
+    <div class="center" style="text-align:center;">
+        <link rel="stylesheet" type="text/css" href="Background.css"/>
+        <h1>Login</h1>
+        <br>
+        <form action="http://localhost:8080/login" method="post">
+            <input class="input font" type="text" placeholder="Username" name="username">
+            <br>
+            <br>
+            <input class="input font" type="password" placeholder="Password" name="password">
+            <br>
+            <br>
+            <input class="btn btn-default" type="submit" value="Login">
+        </form>
+        <br>
+
+        <form action="http://localhost:8080/sign_up" >
+            <p>Click "Sign Up" button to sign up:</p>
+            <input class="btn btn-default" type="submit" value="Sign Up">
+        </form>
+    </div>
 </body>
+
 </html>
 
