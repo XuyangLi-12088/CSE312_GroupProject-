@@ -16,7 +16,7 @@
         <!-- Format of the Navigation bar on the top of the Post Web site -->
         <nav class="navbar navbar-expand-lg bg-light">
             <div class="container-fluid">
-                <a class="navbar-brand" href="http://localhost:8080/signed_in/<username>">Back to Shopping Page</a>
+                <a class="navbar-brand" href="/signed_in/<username>">Back to Shopping Page</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
@@ -24,7 +24,7 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <!-- "Username:______" should redirect user to their own user account page -->
-                            <a class="nav-link" href="http://localhost:8080/account/<username>">Username:</a>
+                            <a class="nav-link" href="/account/<username>">Username:</a>
                         </li>
                     </ul>
                 </div>
@@ -32,29 +32,31 @@
         </nav>
 
         <!-- Format for each post on the Post Page -->
-        <div class="col-12">
-            <label for="post_name" class="form-label">Item Name:</label>
-            <input type="item" class="form-control" id="post_name" placeholder="Enter Post Item Name">
-        </div>
-        <div class="col-12">
-            <label for="item_description" class="form-label">Item Description:</label>
-            <textarea class="form-control" id="item_description" rows="3" placeholder="Enter Post Item Description"></textarea>
-        </div>
-        <div class="col-12">
-            <label for="formFile" class="form-label">Upload Item Images:</label>
-            <input class="form-control" type="file" id="formFile">
-        </div>
-        <div class="col-12">
-            <label for="post_price" class="form-label">Set Price:</label>
-            <div class="input-group mb-3">
-                <span class="input-group-text">$</span>
-                <input type="price" class="form-control" placeholder="Enter Your Price">
+        <form action="/post" id="post-form" enctype="multipart/form-data" method="post">
+            <div class="col-12">
+                <label for="post_name" class="form-label">Item Name:</label>
+                <input type="item" class="form-control" id="post_name" name="item_name" placeholder="Enter Post Item Name">
             </div>
-        </div>
-        <form action="http://localhost:8080/post" id="post-form" method="post">
+            <div class="col-12">
+                <label for="item_description" class="form-label">Item Description:</label>
+                <textarea class="form-control" id="item_description" name="item_description" rows="3" placeholder="Enter Post Item Description"></textarea>
+            </div>
+            <div class="col-12">
+                <label for="formFile" class="form-label">Upload Item Images:</label>
+                <input type="file" class="form-control" id="formFile" name="item_images">
+            </div>
+            <div class="col-12">
+                <label for="post_price" class="form-label">Set Price:</label>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="price" class="form-control" name="item_price" placeholder="Enter Your Price">
+                </div>
+            </div>
             <button type="submit" class="btn btn-primary mb-3">Submit Post</button>
         </form>
 
     </body>
+
+</html>
 
 </html>
