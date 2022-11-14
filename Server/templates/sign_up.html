@@ -14,7 +14,7 @@
 
     
     <div class="center" style="text-align:center;">
-        <link rel="stylesheet" type="text/css" href="Background.css"/>
+        <!-- <link rel="stylesheet" type="text/css" href="Background.css"/> -->
         <h1>Sign Up</h1>
         <br>
         {% for message in get_flashed_messages() %}
@@ -22,9 +22,11 @@
         {% endfor %}
         <br>
         <form action="/sign_up" method="post">
+            <label for="username"></label>
             <input class="input font" type="text" placeholder="Sign Up Username" name="username"/>
             <br>
             <br>
+            <label for="password"></label>
             <input class="input font" type="password" placeholder="Sign Up Password" name="password"/>
             <br>
             <br>
