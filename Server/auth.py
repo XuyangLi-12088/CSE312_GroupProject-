@@ -8,6 +8,9 @@ db = mongo_client["CSE312_Final_Project"]
 
 users_collection = db["users"]
 
+def escape_html(input):
+    return input.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;")
+
 # username contians each user's username, password contians each user's password
 #users_collection.insert_one({'username': "", 'password': ""})
 
@@ -40,8 +43,8 @@ def sign_up():
     if (request.method == "POST"):
         error = ''
         # Get entered username and password
-        get_username = request.form["username"]
-        get_password = request.form["password"]
+        get_username = escape_html(request.form["username"])
+        get_password = escape_html(request.form["password"])
         print("sign up username: " + get_username, flush = True)
         print("sign up password: " + get_password, flush = True)
 
@@ -84,8 +87,8 @@ def login():
     if (request.method == "POST"):
         error = ''
         # get the login username and password
-        get_login_username = request.form["username"]
-        get_login_password = request.form["password"]
+        get_login_username = escape_html(request.form["username"])
+        get_login_password = escape_html(request.form["password"])
         print("login username: " + get_login_username, flush = True)
         print("login password: " + get_login_password, flush = True)
 
