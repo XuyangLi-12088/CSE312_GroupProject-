@@ -117,15 +117,16 @@ def login():
 # User Post Web Page
 @app.route("/post", methods=["GET", "POST"])
 def post():
-    #if (request.method == "POST"):
 
-    #print(request.method)
-    #print(request.path)
-    #print(request.form)
-    #print(request.form["item_name"])
-    #print(request.form["item_description"])
-    #print(request.files["item_images"])
-    #print(request.form["item_price"])
+    if (request.method == "POST"):
+        print(request.method, flush = True)
+        print(request.path, flush = True)
+        print(request.form, flush = True)
+        print(request.form["item_name"], flush = True)
+        print(request.form["item_description"], flush = True)
+        print(request.files["item_images"], flush = True)
+        print(request.form["item_price"], flush = True)
+        
     return render_template("post.html")
 
 

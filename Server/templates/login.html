@@ -1,38 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'base_auth.html' %}
 
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-</head>
+{% block title %}Login{% endblock %}
 
-<body>
-    <div class="center" style="text-align:center;">
-        <link rel="stylesheet" type="text/css" href="Background.css"/>
-        <h1>Login</h1>
+{% block content %}
+<div class="center" style="text-align:center;">
+    <h1>Login</h1>
+    <br>
+    {% for message in get_flashed_messages() %}
+    <div class="flash">{{ message }}</div>
+    {% endfor %}
+    <br>
+    <form action="/login" method="post">
+        <input class="input font" type="text" placeholder="Username" name="username">
         <br>
-        {% for message in get_flashed_messages() %}
-        <div class="flash">{{ message }}</div>
-        {% endfor %}
         <br>
-        <form action="/login" method="post">
-            <input class="input font" type="text" placeholder="Username" name="username">
-            <br>
-            <br>
-            <input class="input font" type="password" placeholder="Password" name="password">
-            <br>
-            <br>
-            <input class="btn btn-default" type="submit" value="Login">
-        </form>
+        <input class="input font" type="password" placeholder="Password" name="password">
         <br>
+        <br>
+        <input class="btn btn-default" type="submit" value="Login">
+    </form>
+    <br>
 
-        <form action="/sign_up" >
-            <p>Click "Sign Up" button to sign up:</p>
-            <input class="btn btn-default" type="submit" value="Sign Up">
-        </form>
-    </div>
-</body>
-
-</html>
+    <form action="/sign_up" >
+        <p>Click "Sign Up" button to sign up:</p>
+        <input class="btn btn-default" type="submit" value="Sign Up">
+    </form>
+</div>
+{% endblock %}
 
