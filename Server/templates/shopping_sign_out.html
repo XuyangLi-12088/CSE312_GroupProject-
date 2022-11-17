@@ -46,24 +46,26 @@
         </nav>
 
         <!-- Format for each post item on the shopping website -->
-        <div class="card">
-            <div class="card-header">
-                <h4>Item Name:</h4>
+        {% for post in posts_list %}
+            <div class="card">
+                <div class="card-header">
+                    <h4>Item Name: {{ post['item_name'] }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Item Description: {{ post['item_description'] }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="image-text">Images:</p>
+                    <img src="/static/uploads/{{ post['item_image'] }}" class="card-img-top" alt="..." style="width:350px;height:400px;">
+                </div>
+                <div class="card-body">
+                    <p class="price">Price: $ {{ post['item_price'] }}</p>
+                    <form action="/login">
+                        <input class="btn btn-primary" type="submit" value="Add to Cart">
+                    </form>
+                </div>
             </div>
-            <div class="card-body">
-                <p class="card-text">Item Description:</p>
-            </div>
-            <div class="card-body">
-                <p class="image-text">Images:</p>
-                <img src="..." class="card-img-top" alt="...">
-            </div>
-            <div class="card-body">
-                <p class="price">Price: $</p>
-                <form action="/login">
-                    <input class="btn btn-primary" type="submit" value="Add to Cart">
-                </form>
-            </div>
-        </div>
+        {% endfor %}
 
     </body>
 

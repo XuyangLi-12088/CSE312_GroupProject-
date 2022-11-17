@@ -24,12 +24,18 @@
                     <ul class="navbar-nav ms-auto">
                         <li class="nav-item">
                             <!-- "Username:______" should redirect user to their own user account page -->
-                            <a class="nav-link" href="/account/<username>">Username:</a>
+                            <a class="nav-link" href="/account/<username>">Username: {{ current_user }}</a>
                         </li>
                     </ul>
                 </div>
             </div>
         </nav>
+
+        <br>
+        {% for message in get_flashed_messages() %}
+        <div class="flash" style="text-align:center;">{{ message }}</div>
+        {% endfor %}
+        <br>
 
         <!-- Format for each post on the Post Page -->
         <form action="/post" id="post-form" enctype="multipart/form-data" method="post">
