@@ -194,7 +194,6 @@ def login():
 
 # User Post Web Page
 @app.route("/post", methods=["GET", "POST"])
-#@login_required
 def post():
 
     print(request.method, flush = True)
@@ -366,6 +365,101 @@ def post():
         print("user_collection: " + str(list(users_collection.find({}, {"_id": 0}))), flush=True)
 
         return redirect(url_for("signed_in"))
+
+
+# User Account Web Page
+@app.route("/account", methods=["GET", "POST"])
+def account():
+    # Check if "auth_token" exist in Cookie
+    get_auth_token = request.cookies.get('auth_token')
+    # if there is no auth_token set, redirect the user to login page
+    if (get_auth_token == None):
+        return redirect(url_for("login"))
+    # if there is a auth_token set
+    else:
+        # hash the auth token that we got from the request
+        sha256_auth_token = hashlib.sha256()
+        sha256_auth_token.update(get_auth_token.encode())
+        hashed_auth_token = sha256_auth_token.digest()
+        # check if the hashed auth token exist in our database
+        check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+        if (len(check_exist) == 0):
+            return redirect(url_for("login"))
+        else:
+            # update html template
+            username = check_exist[0]['username']
+            return render_template('account.html', current_user = username)
+
+
+# User Post History Web Page
+@app.route("/post_history", methods=["GET", "POST"])
+def post_history():
+    if (request.method == "GET"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # update html template
+                username = check_exist[0]['username']
+                # get all posts history from current user
+                user_post_list = check_exist[0]["posts"]
+                print("user's post list: " + str(user_post_list), flush=True)
+                return render_template('post_history.html', current_user = username, posts_list = user_post_list)
+
+    elif(request.method == "POST"):
+        print(request.method, flush = True)
+        print(request.path, flush = True)
+        print(request.form, flush = True)
+        print(request.form['post_id'], flush=True)
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # update html template
+                username = check_exist[0]['username']
+                # get the remove post id
+                remove_post_id = request.form['post_id']
+                # remove post from post_collection database
+                post_collection.delete_one({'post_id': int(remove_post_id)})
+                print("new post collection: " + str(list(post_collection.find({}, {"_id": 0}))), flush=True)
+                # remove post from users_collection database
+                # get the current user posts list
+                user_post_list = check_exist[0]["posts"]
+                for num in range(len(user_post_list)):
+                    if (user_post_list[num]['post_id'] == int(remove_post_id)):
+                        del user_post_list[num]
+                        break
+                print("new user's post list: " + str(user_post_list), flush=True)
+                # update user's posts list in users_collection
+                users_collection.update_one({'username': username}, {"$set": {"posts" : user_post_list}})
+
+                return render_template('post_history.html', current_user = username, posts_list = user_post_list)
+
+
 
 
 if __name__ == '__main__':
