@@ -4,7 +4,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>User Post History Page</title>
+        <title>User Purchase History Page</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
     </head>
     
@@ -32,27 +32,24 @@
         </nav>
 
         <div class="center" style="text-align:center;">
-            <h1> Welcome to {{ current_user }}'s Post History Page!</h1>
+            <h1> Welcome to {{ current_user }}'s Purchase History Page!</h1>
         </div>
 
         <!-- Format for each post item on the shopping website -->
         {% for post in posts_list %}
             <div class="card">
                 <div class="card-header">
-                    <h4>Posted Item Name: {{ post['item_name'] }}</h4>
+                    <h4>Purchased Item Name: {{ post['item_name'] }}</h4>
                 </div>
                 <div class="card-body">
-                    <p class="card-text">Posted Item Description: {{ post['item_description'] }}</p>
+                    <p class="card-text">Purchased Item Description: {{ post['item_description'] }}</p>
                 </div>
                 <div class="card-body">
-                    <p class="image-text">Posted Item Images:</p>
+                    <p class="image-text">Purchased Item Images:</p>
                     <img src="/static/uploads/{{ post['item_image'] }}" class="card-img-top" alt="..." style="width:350px;height:400px;">
                 </div>
                 <div class="card-body">
-                    <p class="price">Posted Price: $ {{ post['item_price'] }}</p>
-                    <form action="/post_history" method="post">
-                        <button class="btn btn-primary" type="submit" name="post_id" value="{{ post['post_id'] }}">Remove Post</button>
-                    </form>
+                    <p class="price">Purchased Item Price: $ {{ post['item_price'] }}</p>
                 </div>
             </div>
         {% endfor %}
