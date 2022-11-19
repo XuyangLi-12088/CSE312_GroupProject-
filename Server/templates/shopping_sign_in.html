@@ -58,8 +58,8 @@
                 </div>
                 <div class="card-body">
                     <p class="price">Price: $ {{ post['item_price'] }}</p>
-                    <form action="http://localhost:8080/signed_in/<username>" method="post">
-                        <input class="btn btn-primary" type="submit" value="Add to Cart">
+                    <form action="/shop_cart" method="post">
+                        <button class="btn btn-primary" type="submit" name="add_to_cart_post_id" value="{{ post['post_id'] }}">Add To Cart</button>
                     </form>
                 </div>
             </div>

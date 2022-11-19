@@ -36,7 +36,7 @@
         </div>
 
         <!-- Format for each post item on the shopping website -->
-        {% for post in posts_list %}
+        {% for post in shopping_cart_list %}
             <div class="card">
                 <div class="card-header">
                     <h4>Item Name: {{ post['item_name'] }}</h4>
@@ -50,8 +50,8 @@
                 </div>
                 <div class="card-body">
                     <p class="price">Price: $ {{ post['item_price'] }}</p>
-                    <form action="/post_history" method="post">
-                        <button class="btn btn-primary" type="submit" name="post_id" value="{{ post['post_id'] }}">Remove Item From Shopping Cart</button>
+                    <form action="/shop_cart" method="post">
+                        <button class="btn btn-primary" type="submit" name="remove_post_id" value="{{ post['post_id'] }}">Remove Item From Shopping Cart</button>
                     </form>
                 </div>
             </div>
@@ -63,7 +63,8 @@
             <div class="card-header">
                 <h4>Total Price: $ {{ total_price }}</h4>
                 <form action="/shop_cart" method="post">
-                    <input class="btn btn-primary" type="submit" value="Purchase All" style="float: right;"></input>
+                    <button class="btn btn-primary" type="submit" style="float: right;" name="purchase_all" value="Purchase All">Purchase All</button>
+                    <!--<input class="btn btn-primary" type="submit" value="Purchase All" style="float: right;"></input>-->
                 </form>
             </div>
         </div>

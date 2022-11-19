@@ -18,6 +18,7 @@ db = mongo_client["CSE312_Final_Project"]
 #     "password": str(" "), 
 #     "posts": List[{"post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
 #     "purchases": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
+#     "shopping_cart": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}]
 #     "auth_token": bytes(" ")
 #   }
 # }
@@ -69,7 +70,7 @@ def home():
 
 
 # Shopping Web Page When User loged in
-@app.route('/signed_in')
+@app.route('/signed_in', methods=["GET", "POST"])
 def signed_in():
     # Check if "auth_token" exist in Cookie
     get_auth_token = request.cookies.get('auth_token')
@@ -128,7 +129,7 @@ def sign_up():
         if (len(check_exist) == 0):
             # username not exists
             # Store username and password into the database
-            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "purchases": []})
+            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "purchases": [], "shopping_cart": []})
             return redirect(url_for("login"))
 
         else:
@@ -449,6 +450,7 @@ def post_history():
                 # remove post from users_collection database
                 # get the current user posts list
                 user_post_list = check_exist[0]["posts"]
+                # delete the remove post from user_post_list
                 for num in range(len(user_post_list)):
                     if (user_post_list[num]['post_id'] == int(remove_post_id)):
                         del user_post_list[num]
@@ -457,7 +459,177 @@ def post_history():
                 # update user's posts list in users_collection
                 users_collection.update_one({'username': username}, {"$set": {"posts" : user_post_list}})
 
-                return render_template('post_history.html', current_user = username, posts_list = user_post_list)
+                # get current posts list from post_collection
+                posts_list = list(post_collection.find({}, {"_id": 0}))
+
+                return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list)
+
+
+# Shopping Cart Web Page When User loged in
+@app.route('/shop_cart', methods=["GET", "POST"])
+def shopping_cart():
+    if (request.method == "GET"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # update html template
+                username = check_exist[0]['username']
+                shopping_cart_list = check_exist[0]['shopping_cart']
+
+                return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list)
+
+    elif (request.method == "POST"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            print("current_user: " + str(check_exist))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # add the post into current user's shopping cart
+                if (request.form.get('add_to_cart_post_id') != None):
+                    # get current user's username
+                    username = check_exist[0]['username']
+                    # get the Post id for current item (Add To Cart)
+                    post_id_for_cart = request.form['add_to_cart_post_id']
+                    # get current users shopping cart list from database
+                    shopping_cart_list = check_exist[0]["shopping_cart"]
+                    # check if the current item already exist in user's shopping cart list
+                    for item in shopping_cart_list:
+                        if (item['post_id'] == int(post_id_for_cart)):
+                            # calculate the total price in current user's shopping cart
+                            total_price = 0
+                            for post in shopping_cart_list:
+                                total_price += float(post["item_price"])
+                            return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list, total_price = total_price)
+                        else:
+                            pass
+                    # get the Post by post id from post_collection 
+                    add_to_cart_post = list(post_collection.find({"post_id": int(post_id_for_cart)}, {"_id": 0}))[0]
+                    # add the Post into current user's shopping cart list
+                    shopping_cart_list.append(add_to_cart_post)
+                    # update current user's shopping cart list
+                    users_collection.update_one({'username': username}, {"$set": {"shopping_cart" : shopping_cart_list}})
+
+                    # calculate the total price in current user's shopping cart
+                    total_price = 0
+                    for post in shopping_cart_list:
+                        total_price += float(post["item_price"])
+
+                    return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list, total_price = total_price)
+
+                # remove post from current user's shopping cart
+                elif (request.form.get('remove_post_id') != None):
+                    # get current user's username
+                    username = check_exist[0]['username']
+                    # get the Post id for current item (Remove Item From Cart)
+                    post_id_for_cart = request.form['remove_post_id']
+                    # get current users shopping cart list from database
+                    shopping_cart_list = check_exist[0]["shopping_cart"]
+                    # Remove the item from current user's shopping cart list
+                    for num in range(len(shopping_cart_list)):
+                        if (shopping_cart_list[num]['post_id'] == int(post_id_for_cart)):
+                            del shopping_cart_list[num]
+                            break
+                    # update user's shopping cart list in users_collection
+                    users_collection.update_one({'username': username}, {"$set": {"shopping_cart" : shopping_cart_list}})
+
+                    # calculate the total price in current user's shopping cart
+                    total_price = 0
+                    for post in shopping_cart_list:
+                        total_price += float(post["item_price"])
+
+                    return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list, total_price = total_price)
+                
+                # Purchase all Items from current user's shopping cart
+                elif (request.form.get('purchase_all') != None):
+                    # get current user's username
+                    username = check_exist[0]['username']
+                    # get current user's shopping cart list from database
+                    shopping_cart_list = check_exist[0]["shopping_cart"]
+                    # get current user's "purchases" list from database
+                    purchases_list = check_exist[0]["purchases"]
+                    # add all items in current user's shopping cart list into current user's "purchases" list in database
+                    for item in shopping_cart_list:
+                        purchases_list.append(item)
+                        # delete all cart items from post_collection
+                        post_collection.delete_one({'post_id': int(item['post_id'])})
+
+                    # clear current user's shopping cart list
+                    shopping_cart_list = []
+                    # update current user's shopping cart list and "purchases" list in database
+                    users_collection.update_one({'username': username}, {"$set": {"shopping_cart" : shopping_cart_list}})
+                    users_collection.update_one({'username': username}, {"$set": {"purchases" : purchases_list}})
+
+                    # set total price to 0
+                    total_price = 0
+
+                    return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list, total_price = total_price)
+
+
+
+# Purchases history Web Page When User loged in
+@app.route('/purchase_history', methods=["GET", "POST"])
+def purchase_history():
+    if (request.method == "GET"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # update html template
+                username = check_exist[0]['username']
+                purchases_list = check_exist[0]['purchases']
+
+                return render_template('purchase_history.html', current_user = username, purchases_list = purchases_list)
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
 
 
 
