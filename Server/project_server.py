@@ -618,6 +618,34 @@ def purchase_history():
                 return render_template('purchase_history.html', current_user = username, purchases_list = purchases_list)
 
 
+# Auction Web Page When User loged in
+@app.route('/auction', methods=["GET", "POST"])
+def auction():
+    if (request.method == "GET"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                # update html template
+                username = check_exist[0]['username']
+                #error = ""
+                #flash(error)
+                return render_template('auction.html', current_user = username)
+
+
+
 
 
 
