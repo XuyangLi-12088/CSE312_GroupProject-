@@ -1,4 +1,5 @@
 from flask import Flask, Blueprint, flash, g, redirect, render_template, request, session, url_for, make_response
+from flask_socketio import SocketIO, send, emit
 from pymongo import MongoClient
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
@@ -17,18 +18,27 @@ db = mongo_client["CSE312_Final_Project"]
 #   { "username": str(" "), 
 #     "password": str(" "), 
 #     "posts": List[{"post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
+#     "auctions": List[{"auction_id": "", "auction_item_name": "", "auction_item_description": "", "auction_item_image": "", "auction_current_price": "", "highest_bid_user": "", "auction_end_time": ""}],
 #     "purchases": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
 #     "shopping_cart": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}]
 #     "auth_token": bytes(" ")
 #   }
 # }
 users_collection = db["users"]
+
 # Format of post_collection:
 # {
 #   { "post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}
 #   { "post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}
 # }
 post_collection = db["posts"]
+
+# Format of auction_collection:
+# {
+#   { "auction_id": "", "item_name": "", "item_description": "", "item_image": "", "auction_current_price": "", "highest_bid_user": "", "auction_end_time": ""}
+#   { "auction_id": "", "item_name": "", "item_description": "", "item_image": "", "auction_current_price": "", "highest_bid_user": "", "auction_end_time": ""}
+# }
+auction_collection = db["auctions"]
 
 # Format of posts_id_collection:
 # {
@@ -44,6 +54,7 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'c032ce37b8b5cb5f4f50e2736bae275f'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 def get_next_id():
     id_object = posts_id_collection.find_one({})
@@ -62,11 +73,13 @@ def home():
     print("Request form: " + str(request.form), flush = True)
     print("Request method: " + str(request.method), flush = True)
     print("Request path: " + str(request.path), flush = True)
-    # posts = get all posts from database
-    # update html: % for post in posts %}
+    
+    # get all posts from posts database
     posts_list = list(post_collection.find({}, {"_id": 0}))
+    # get all auctions from auctions database
+    auctions_list = list(auction_collection.find({}, {"_id": 0}))
 
-    return render_template('shopping_sign_out.html', posts_list = posts_list)
+    return render_template('shopping_sign_out.html', posts_list = posts_list, auctions_list = auctions_list)
 
 
 # Shopping Web Page When User loged in
@@ -90,9 +103,12 @@ def signed_in():
         else:
             # update html template
             username = check_exist[0]['username']
+            # get all posts from posts database
             posts_list = list(post_collection.find({}, {"_id": 0}))
+            # get all auctions from auctions database
+            auctions_list = list(auction_collection.find({}, {"_id": 0}))
 
-            return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list)
+            return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list, auctions_list = auctions_list)
 
 
 # User Sign Up Web Page
@@ -129,7 +145,7 @@ def sign_up():
         if (len(check_exist) == 0):
             # username not exists
             # Store username and password into the database
-            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "purchases": [], "shopping_cart": []})
+            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "auctions": [], "purchases": [], "shopping_cart": []})
             return redirect(url_for("login"))
 
         else:
@@ -184,6 +200,7 @@ def login():
                 users_collection.update_one({'username': get_login_username}, {"$set": {"auth_token" : hashed_auth_token}})
                 resp = make_response(redirect(url_for("signed_in")))
                 resp.set_cookie("auth_token", value = auth_token, max_age = 31536000, httponly = True)
+                session['auth_token'] = auth_token
                 return resp
             else:
                 error = "Wrong Password, Please try again!"
@@ -417,13 +434,15 @@ def post_history():
                 # get all posts history from current user
                 user_post_list = check_exist[0]["posts"]
                 print("user's post list: " + str(user_post_list), flush=True)
-                return render_template('post_history.html', current_user = username, posts_list = user_post_list)
+                # get all auction history from current user
+                user_auction_list = check_exist[0]["auctions"]
+                print("user's auction list: " + str(user_auction_list), flush=True)
+                return render_template('post_history.html', current_user = username, posts_list = user_post_list, auctions_list = user_auction_list)
 
     elif(request.method == "POST"):
         print(request.method, flush = True)
         print(request.path, flush = True)
         print(request.form, flush = True)
-        print(request.form['post_id'], flush=True)
         # Check if "auth_token" exist in Cookie
         get_auth_token = request.cookies.get('auth_token')
         # if there is no auth_token set, redirect the user to login page
@@ -440,29 +459,62 @@ def post_history():
             if (len(check_exist) == 0):
                 return redirect(url_for("login"))
             else:
-                # update html template
-                username = check_exist[0]['username']
-                # get the remove post id
-                remove_post_id = request.form['post_id']
-                # remove post from post_collection database
-                post_collection.delete_one({'post_id': int(remove_post_id)})
-                print("new post collection: " + str(list(post_collection.find({}, {"_id": 0}))), flush=True)
-                # remove post from users_collection database
-                # get the current user posts list
-                user_post_list = check_exist[0]["posts"]
-                # delete the remove post from user_post_list
-                for num in range(len(user_post_list)):
-                    if (user_post_list[num]['post_id'] == int(remove_post_id)):
-                        del user_post_list[num]
-                        break
-                print("new user's post list: " + str(user_post_list), flush=True)
-                # update user's posts list in users_collection
-                users_collection.update_one({'username': username}, {"$set": {"posts" : user_post_list}})
+                if (request.form.get('post_id') != None):
+                    # update html template
+                    username = check_exist[0]['username']
+                    # get the remove post id
+                    remove_post_id = request.form['post_id']
+                    # remove post from post_collection database
+                    post_collection.delete_one({'post_id': int(remove_post_id)})
+                    print("new post collection: " + str(list(post_collection.find({}, {"_id": 0}))), flush=True)
+                    # remove post from users_collection database
+                    # get the current user posts list
+                    user_post_list = check_exist[0]["posts"]
+                    # delete the remove post from user_post_list
+                    for num in range(len(user_post_list)):
+                        if (user_post_list[num]['post_id'] == int(remove_post_id)):
+                            del user_post_list[num]
+                            break
+                    print("new user's post list: " + str(user_post_list), flush=True)
+                    # update user's posts list in users_collection
+                    users_collection.update_one({'username': username}, {"$set": {"posts" : user_post_list}})
 
-                # get current posts list from post_collection
-                posts_list = list(post_collection.find({}, {"_id": 0}))
+                    # get current posts list from post_collection
+                    posts_list = list(post_collection.find({}, {"_id": 0}))
 
-                return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list)
+                    # get current auction list from auction_collection
+                    auctions_list = list(auction_collection.find({}, {"_id": 0}))
+
+                    return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list, auctions_list = auctions_list)
+
+                elif (request.form.get('auction_id') != None):
+                    # update html template
+                    username = check_exist[0]['username']
+                    # get the remove auction id
+                    remove_auction_id = request.form['auction_id']
+                    # remove auction from auction_collection database
+                    auction_collection.delete_one({'auction_id': int(remove_auction_id)})
+                    print("new auction collection: " + str(list(auction_collection.find({}, {"_id": 0}))), flush=True)
+                    # remove auction from users_collection database
+                    # get the current user auction list
+                    user_auction_list = check_exist[0]["auctions"]
+                    # delete the remove auction from user_auction_list
+                    for num in range(len(user_auction_list)):
+                        if (user_auction_list[num]['auction_id'] == int(remove_auction_id)):
+                            del user_auction_list[num]
+                            break
+                    print("new user's auction list: " + str(user_auction_list), flush=True)
+                    # update user's posts list in users_collection
+                    users_collection.update_one({'username': username}, {"$set": {"auctions" : user_auction_list}})
+
+                    # get current posts list from post_collection
+                    posts_list = list(post_collection.find({}, {"_id": 0}))
+
+                    # get current auction list from auction_collection
+                    auctions_list = list(auction_collection.find({}, {"_id": 0}))
+
+                    return render_template('shopping_sign_in.html', current_user = username, posts_list = posts_list, auctions_list = auctions_list)
+
 
 
 # Shopping Cart Web Page When User loged in
@@ -640,31 +692,265 @@ def auction():
             else:
                 # update html template
                 username = check_exist[0]['username']
-                #error = ""
-                #flash(error)
                 return render_template('auction.html', current_user = username)
 
+    if (request.method == "POST"):
+        # Check if "auth_token" exist in Cookie
+        get_auth_token = request.cookies.get('auth_token')
+        # if there is no auth_token set, redirect the user to login page
+        if (get_auth_token == None):
+            return redirect(url_for("login"))
+        # if there is a auth_token set
+        else:
+            # hash the auth token that we got from the request
+            sha256_auth_token = hashlib.sha256()
+            sha256_auth_token.update(get_auth_token.encode())
+            hashed_auth_token = sha256_auth_token.digest()
+            # check if the hashed auth token exist in our database
+            check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+            if (len(check_exist) == 0):
+                return redirect(url_for("login"))
+            else:
+                username = check_exist[0]['username']
+                # get all inputs
+                get_item_name = escape_html(request.form["item_name"])
+                get_item_description = escape_html(request.form["item_description"])
+                get_item_image = request.files["item_images"]
+                get_item_price = escape_html(request.form["auction_price"])
+                get_end_time = escape_html(request.form["auction_end_time"])
+                print("Item_name: " + get_item_name, flush = True)
+                print("Item_description: " + get_item_description, flush = True)
+                print("Item_image: " + str(get_item_image), flush = True)
+                print("Item_image_name: " + get_item_image.filename, flush = True)
+                print("Auction_price: " + get_item_price, flush = True)
+                print("Auction_End_Time: " + get_end_time, flush = True)
+                error = ''
+
+                # check if all the inputs are vaild
+                # set a limit to item name, item name must between 1 to 200 characters
+                if (len(get_item_name) >= 1 and len(get_item_name) <= 200):
+                    pass
+                else:
+                    error = "Invalid Item Name, Make sure item name is between 0 to 200 Characters"
+                    flash(error)
+                    return render_template("auction.html", current_user = username)
+
+                # set a limit to item description, item description must between 1 to 2000 characters
+                if (len(get_item_description) >= 1 and len(get_item_description) <= 2000):
+                    pass
+                else:
+                    error = "Invalid Item Description, Make sure item description is between 0 to 2000 Characters"
+                    flash(error)
+                    return render_template("auction.html", current_user = username)
+
+                # set a limit to item price, item price must between 1 to 100 characters
+                if (len(get_item_price) >= 1 and len(get_item_price) <= 100):
+                    # Make sure price input only contains numbers
+                    # If all characters in item price are numbers
+                    if (get_item_price.isnumeric() == True):
+                        # set ".00" to the end of the price
+                        get_item_price = get_item_price + ".00"
+                    # Not all characteres in item price are numbers
+                    else:
+                        if ("." in get_item_price):
+                            dot_index = get_item_price.find(".")
+                            price_before_dot = get_item_price[0 : dot_index]
+                            print("price_before_dot: " + price_before_dot, flush=True)
+                            price_after_dot = get_item_price[dot_index + 1 :]
+                            print("price_after_dot: " + price_after_dot, flush=True)
+                            for character in price_before_dot:
+                                if (character.isnumeric() == True):
+                                    pass
+                                else:
+                                    error = "Invalid item price, Please make sure set the price to two decimal places"
+                                    flash(error)
+                                    return render_template("auction.html", current_user = username)
+
+                            if (len(price_after_dot) == 2):
+                                if (price_after_dot.isnumeric() == True):
+                                    pass
+                                else:
+                                    error = "Invalid item price, Please make sure set the price to two decimal places"
+                                    flash(error)
+                                    return render_template("auction.html", current_user = username)
+                            elif (len(price_after_dot) == 1):
+                                if (price_after_dot.isnumeric() == True):
+                                    get_item_price = get_item_price + '0'
+                                else:
+                                    error = "Invalid item price, Please make sure set the price to two decimal places"
+                                    flash(error)
+                                    return render_template("auction.html", current_user = username)
+                            else:
+                                error = "Invalid item price, make sure set the price to two decimal places"
+                                flash(error)
+                                return render_template("auction.html", current_user = username)
+                        else:
+                            error = "Invalid item price"
+                            flash(error)
+                            return render_template("auction.html", current_user = username)
+                else:
+                    error = "Invalid item price"
+                    flash(error)
+                    return render_template("auction.html", current_user = username)
+
+                # set a limit to item image, number of item images must be 1
+                if (get_item_image.filename != ''):
+                    image_split_list = get_item_image.filename.split(".")
+                    if (image_split_list[1] in ALLOWED_EXTENSIONS):
+                        filename = secure_filename(get_item_image.filename)
+                        get_item_image.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                    else:
+                        error = "Invalid Item Image, Make sure the type of the file is jpg or jpeg"
+                        flash(error)
+                        return render_template("auction.html", current_user = username)
+                else:
+                    error = "Invalid Item Image, Make sure upload an image"
+                    flash(error)
+                    return render_template("auction.html", current_user = username)
+
+            # <-- All inputs are valid at this point -->
+            # build current auction informations
+            auction_content = {}
+            auction_content["posted_user"] = username
+            auction_content["auction_id"] = get_next_id()
+            auction_content["item_name"] = get_item_name
+            auction_content["item_description"] = get_item_description
+            auction_content["item_image"] = filename
+            auction_content["auction_current_price"] = get_item_price
+            auction_content["highest_bid_user"] = username
+            auction_content["auction_end_time"] = get_end_time
+            # Store all inputs into the auction database
+            auction_collection.insert_one(auction_content)
+            print("auction_collection: " + str(list(auction_collection.find({}, {"_id": 0}))), flush=True)
+
+            # Store all inputs into current user's database
+            get_user_from_database = list(users_collection.find({"username": username}, {"_id": 0}))
+            # get current user's "auctions" list
+            user_auction_list = get_user_from_database[0]["auctions"]
+            user_auction_list.append(auction_content)
+            users_collection.update_one({'username': username}, {"$set": {"auctions" : user_auction_list}})
+            print("user_collection: " + str(list(users_collection.find({}, {"_id": 0}))), flush=True)
+
+            return redirect(url_for("signed_in"))
 
 
 
+@socketio.on('message')
+def handle_message(data):
+    print('received_data (message): ' + data, flush=True)
+    send(data)
 
 
+@socketio.on('auction')
+def handle_auction(dict):
+    print('received_dict: ' + str(dict), flush=True)
+    print('received_id: ' + str(dict["id"]), flush=True)
+    print('received_bid: ' + str(dict["price"]), flush=True)
 
+    error = ''
+    get_item_price = dict["price"]
+    #print("current_bid" + get_item_price, flush=True)
 
+    # check if the entered price is valid or not
+    if (len(get_item_price) >= 1 and len(get_item_price) <= 100):
+        # Make sure price input only contains numbers
+        # If all characters in item price are numbers
+        if (get_item_price.isnumeric() == True):
+            # set ".00" to the end of the price
+            get_item_price = get_item_price + ".00"
+        # Not all characteres in item price are numbers
+        else:
+            if ("." in get_item_price):
+                dot_index = get_item_price.find(".")
+                price_before_dot = get_item_price[0 : dot_index]
+                print("price_before_dot: " + price_before_dot, flush=True)
+                price_after_dot = get_item_price[dot_index + 1 :]
+                print("price_after_dot: " + price_after_dot, flush=True)
+                for character in price_before_dot:
+                    if (character.isnumeric() == True):
+                        pass
+                    else:
+                        error = "Invalid item price, Please make sure set the price to two decimal places"
+                        flash(error)
+                if (len(price_after_dot) == 2):
+                    if (price_after_dot.isnumeric() == True):
+                        pass
+                    else:
+                        error = "Invalid item price, Please make sure set the price to two decimal places"
+                        flash(error)
+                elif (len(price_after_dot) == 1):
+                    if (price_after_dot.isnumeric() == True):
+                        get_item_price = get_item_price + '0'
+                    else:
+                        error = "Invalid item price, Please make sure set the price to two decimal places"
+                        flash(error)
+                else:
+                    error = "Invalid item price, make sure set the price to two decimal places"
+                    flash(error)
+            else:
+                error = "Invalid item price"
+                flash(error)
+    else:
+        error = "Invalid item price"
+        flash(error)
 
+    if (error == ''):
+        print("current_bid: " + get_item_price, flush=True)
+        # check is the new bid higher than the old bid
+        auction_current_price = list(auction_collection.find({"auction_id": int(dict['id'])}, {"_id": 0}))[0]['auction_current_price']
+        if (float(get_item_price) > float(auction_current_price)):
+            if ('auth_token' in session):
+                # get auth_token in session
+                get_auth_token = session['auth_token']
+                print("Current_auth_token: " + get_auth_token, flush=True)
+                # user auth_token get the username
+                # hash the auth token that we got from the request
+                sha256_auth_token = hashlib.sha256()
+                sha256_auth_token.update(get_auth_token.encode())
+                hashed_auth_token = sha256_auth_token.digest()
+                # check if the hashed auth token exist in our database
+                check_exist = list(users_collection.find({"auth_token": hashed_auth_token}, {"_id": 0}))
+                if (len(check_exist) == 0):
+                    pass
+                else:
+                    print("Current_username: " + check_exist[0]["username"], flush=True)
+                    # update the auction's "auction_current_price" and "highest_bid_user" in auction database
+                    auction_collection.update_one({'auction_id': int(dict["id"])}, {"$set": {"auction_current_price" : get_item_price}})
+                    auction_collection.update_one({'auction_id': int(dict["id"])}, {"$set": {"highest_bid_user" : check_exist[0]["username"]}})
 
+                    # update the auction in posted user's auction list
+                    current_auction = list(auction_collection.find({"auction_id": int(dict["id"])}, {"_id": 0}))[0]
+                    # get the "posted username"
+                    posted_username = current_auction['posted_user']
+                    # get the auction list for the "posted_user"
+                    posted_user_auction_list = list(users_collection.find({"username": posted_username}, {"_id": 0}))[0]['auctions']
+                    # update "posted_user_auction_list"
+                    for auction in posted_user_auction_list:
+                        if (auction['auction_id'] == int(dict["id"])):
+                            auction["auction_current_price"] = get_item_price
+                            auction["highest_bid_user"] = check_exist[0]["username"]
+                        else:
+                            pass
+                    # update "posted_user_auction_list" in user's database
+                    users_collection.update_one({'username': posted_username}, {"$set": {"auctions" : posted_user_auction_list}})
 
+                    # change dict["price"] to get_item_price
+                    dict["price"] = get_item_price
+                    emit('auction', dict, broadcast=True)
+            else:
+                pass
+        else:
+            pass
+    else:
+        pass
 
-
-
-    
 
 
 
 
 if __name__ == '__main__':
-    app.run(host = "0.0.0.0", port = 8080, debug = True)
-
+    socketio.run(app, host = "0.0.0.0", port = 8080, debug = True)
+    #app.run(host = "0.0.0.0", port = 8080, debug = True)
 
 
 

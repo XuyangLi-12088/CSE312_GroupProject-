@@ -38,10 +38,10 @@
         <br>
 
         <!-- Format for each post on the Post Page -->
-        <form action="/post" id="post-form" enctype="multipart/form-data" method="post">
+        <form action="/auction" id="post-form" enctype="multipart/form-data" method="post">
             <div class="col-12">
-                <label for="post_name" class="form-label">Item Name:</label>
-                <input type="item" class="form-control" id="post_name" name="item_name" placeholder="Enter Post Item Name">
+                <label for="auction_name" class="form-label">Item Name:</label>
+                <input type="item" class="form-control" id="auction_name" name="item_name" placeholder="Enter Post Item Name">
             </div>
             <div class="col-12">
                 <label for="item_description" class="form-label">Item Description:</label>
@@ -50,6 +50,13 @@
             <div class="col-12">
                 <label for="formFile" class="form-label">Upload Item Images:</label>
                 <input type="file" class="form-control" id="formFile" name="item_images">
+            </div>
+            <div class="col-12">
+                <label for="auction_price" class="form-label">Set Auction Price:</label>
+                <div class="input-group mb-3">
+                    <span class="input-group-text">$</span>
+                    <input type="auction_price" class="form-control" name="auction_price" placeholder="Enter the starting price for the auction, Example: 1000.00 (Set it to two decimal places)">
+                </div>
             </div>
             <div class="col-12">
                 <label for="auction_end_time" class="form-label">Set Auction End Time:</label>

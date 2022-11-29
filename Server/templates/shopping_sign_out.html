@@ -46,6 +46,51 @@
         </nav>
 
         <!-- Format for each post item on the shopping website -->
+        <!-- Auctions Section -->
+        <div class="card">
+            <div class="card-header">
+                <h1>Auctions Section:</h1>
+            </div>
+            <br>
+        {% for auction in auctions_list %}
+            <div class="card">
+                <div class="card-header">
+                    <h4>Item Name: {{ auction['item_name'] }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Item Description: {{ auction['item_description'] }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="image-text">Images:</p>
+                    <img src="/static/uploads/{{ auction['item_image'] }}" class="card-img-top" alt="..." style="width:350px;height:400px;">
+                </div>
+                <div class="card-body">
+                    <p class="Auction End Time">Auction End Time: {{ auction['auction_end_time'] }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="current bid">Current Bid: </p>
+                    <div id="current_bid">
+                        <b>${{ auction['auction_current_price'] }}</b>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <form action="/login">
+                        <input type="text" id="enter_bid" placeholder="Enter your bid"></input>
+                        <button class="btn btn-primary" type="submit" id="place_bid">Place Bid</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+
+        <br>
+
+        <!-- Posts Section -->
+        <div class="card">
+            <div class="card-header">
+                <h1>Posts Section:</h1>
+            </div>
+            <br>
         {% for post in posts_list %}
             <div class="card">
                 <div class="card-header">
@@ -66,6 +111,7 @@
                 </div>
             </div>
         {% endfor %}
+        </div>
 
     </body>
 

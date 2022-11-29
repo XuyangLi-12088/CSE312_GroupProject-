@@ -6,6 +6,10 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Shopping Web Page - Signed In</title>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+        <script src="{{ url_for('static', filename='websocket.js')}}"></script>
+
     </head>
     
     <body>
@@ -44,6 +48,49 @@
         </nav>
 
         <!-- Format for each post item on the shopping website -->
+        <!-- Auctions Section -->
+        <div class="card">
+            <div class="card-header">
+                <h1>Auctions Section:</h1>
+            </div>
+            <br>
+        {% for auction in auctions_list %}
+            <div class="card">
+                <div class="card-header">
+                    <h4>Item Name: {{ auction['item_name'] }}</h4>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">Item Description: {{ auction['item_description'] }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="image-text">Images:</p>
+                    <img src="/static/uploads/{{ auction['item_image'] }}" class="card-img-top" alt="..." style="width:350px;height:400px;">
+                </div>
+                <div class="card-body">
+                    <p class="Auction End Time">Auction End Time: {{ auction['auction_end_time'] }}</p>
+                </div>
+                <div class="card-body">
+                    <p class="current bid">Current Bid: </p>
+                    <div id="current_bid_{{ auction['auction_id'] }}">
+                        <b>${{ auction['auction_current_price'] }}</b>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <input style="width: 300px;" type="text" id="enter_bid_{{ auction['auction_id'] }}" placeholder="Enter your bid, Example: 1000.00"></input>
+                    <button class="btn btn-primary" type="submit" id="{{ auction['auction_id'] }}" onclick="sendPrice(this.id)">Place Bid</button>
+                </div>
+            </div>
+        {% endfor %}
+        </div>
+
+        <br>
+
+        <!-- Posts Section -->
+        <div class="card">
+            <div class="card-header">
+                <h1>Posts Section:</h1>
+            </div>
+            <br>
         {% for post in posts_list %}
             <div class="card">
                 <div class="card-header">
@@ -64,6 +111,7 @@
                 </div>
             </div>
         {% endfor %}
+        </div>
 
     </body>
 
