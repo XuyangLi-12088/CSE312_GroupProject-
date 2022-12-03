@@ -7,6 +7,7 @@ import functools
 import secrets
 import hashlib
 import os
+import time
 from helper_function import escape_html
 
 mongo_client = MongoClient("mongo")
@@ -944,6 +945,21 @@ def handle_auction(dict):
     else:
         pass
 
+
+@socketio.on('count_down')
+def handle_count_down(dict):
+
+    print('received_id: ' + str(dict['auction_id']), flush=True)
+    print('received_time: ' + str(dict['count_down']), flush=True)
+    if (str(dict['count_down']) != '0'):
+        # update "auction_end_time" in auction collection
+        auction_collection.update_one({'auction_id': int(dict['auction_id'])}, {"$set": {"auction_end_time" : str(dict['count_down'])}})
+        #emit('countdown', dict, broadcast=True)
+    else:
+        # update "auction_end_time" in auction collection
+        auction_collection.update_one({'auction_id': int(dict['auction_id'])}, {"$set": {"auction_end_time" : 'Expired'}})
+        emit('countdown', {"auction_id": dict['auction_id'], "count_down": 'Expired'}, broadcast=True)
+        
 
 
 
