@@ -809,6 +809,21 @@ def auction():
                     flash(error)
                     return render_template("auction.html", current_user = username)
 
+                # set a limit to auction_end_time, auction_end_time must between 1 to 100 characters
+                if (len(get_end_time) >= 1 and len(get_end_time) <= 100):
+                    # Make sure time input only contains numbers
+                    # If all characters in auction end time are numbers
+                    if (get_end_time.isnumeric() == True):
+                        pass
+                    else:
+                        error = "Invalid Time, Make sure input time is an integer"
+                        flash(error)
+                        return render_template("auction.html", current_user = username)
+                else:
+                    error = "Invalid Time, Make sure the length of input time is between 1 to 100"
+                    flash(error)
+                    return render_template("auction.html", current_user = username)
+
             # <-- All inputs are valid at this point -->
             # build current auction informations
             auction_content = {}
