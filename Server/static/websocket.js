@@ -84,14 +84,9 @@ function get_countdown_by_id(id) {
         dict[current_id] = time;
     }
 
-
-    // get starting time
-    // const starting_seconds = document.getElementById("auction_end_time_" + id).innerHTML;
-    // time = starting_seconds;
-
     console.log("starting time: " + time);
 
-    timeout = setInterval(updateCountdown, 1000, current_id);
+    setTimeout(updateCountdown, 1000, current_id);
 
 }
 
@@ -108,12 +103,16 @@ function updateCountdown(id) {
     dict[id] = dict[id] - 1;
 
     if (dict[id] == 0){
-        clearInterval(timeout);
+        //clearInterval(timeout);
         document.getElementById("auction_end_time_" + id).innerHTML = 'Expired'
+        console.log(id.toString() +": " + "Expired");
+        socket.emit('count_down', {'auction_id': id, 'count_down': dict[id]})
         return "Expired";
     }
+    else{
+        console.log("current_time: " + dict[id])
+        socket.emit('count_down', {'auction_id': id, 'count_down': dict[id]})
+        setTimeout(updateCountdown, 1000, id);
+    }
 
-    console.log("current_time: " + dict[id])
-
-    socket.emit('count_down', {'auction_id': id, 'count_down': dict[id]})
 }
