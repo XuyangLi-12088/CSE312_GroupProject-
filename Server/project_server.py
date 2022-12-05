@@ -542,7 +542,12 @@ def shopping_cart():
                 username = check_exist[0]['username']
                 shopping_cart_list = check_exist[0]['shopping_cart']
 
-                return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list)
+                # calculate the total price in current user's shopping cart
+                total_price = 0
+                for post in shopping_cart_list:
+                    total_price += float(post["item_price"])
+
+                return render_template('shopping_cart.html', current_user = username, shopping_cart_list = shopping_cart_list, total_price = total_price)
 
     elif (request.method == "POST"):
         # Check if "auth_token" exist in Cookie
