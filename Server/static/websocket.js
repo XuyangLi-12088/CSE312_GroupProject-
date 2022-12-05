@@ -58,35 +58,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 function sendPrice(id) {
     var socket = io.connect();
-    const placed_bid = document.querySelector("#enter_bid_" + id).value;
-    document.querySelector("#enter_bid_" + id).value = "";
-    document.querySelector("#enter_bid_" + id).focus();
-    console.log(id);
-    console.log(placed_bid);
-    socket.emit('auction', {"id": id, "price": placed_bid});
+    if (document.getElementById("auction_end_time_" + id).innerHTML == "Expired"){
+
+    }else{
+        const placed_bid = document.querySelector("#enter_bid_" + id).value;
+        document.querySelector("#enter_bid_" + id).value = "";
+        document.querySelector("#enter_bid_" + id).focus();
+        console.log(id);
+        console.log(placed_bid);
+        socket.emit('auction', {"id": id, "price": placed_bid});
+    }
 }
 
 
 function get_countdown_by_id(id) {
-    console.log(id);
-    const current_id = id;
+    if (document.getElementById("auction_end_time_" + id).innerHTML == "Expired"){
 
-    // if current_id is in dictionary, get the current time by the current id
-    if (current_id in dict){
+    }else{
+        console.log(id);
+        const current_id = id;
 
+        // if current_id is in dictionary, get the current time by the current id
+        if (current_id in dict){
+
+        }
+        // if current_id is not in dictionary, add key-value pair in dict
+        else{
+            // get starting time
+            const starting_seconds = document.getElementById("auction_end_time_" + id).innerHTML;
+            time = starting_seconds;
+            // add key-value pair in dict
+            dict[current_id] = time;
+        }
+
+        console.log("starting time: " + time);
+
+        setTimeout(updateCountdown, 1000, current_id);
     }
-    // if current_id is not in dictionary, add key-value pair in dict
-    else{
-        // get starting time
-        const starting_seconds = document.getElementById("auction_end_time_" + id).innerHTML;
-        time = starting_seconds;
-        // add key-value pair in dict
-        dict[current_id] = time;
-    }
-
-    console.log("starting time: " + time);
-
-    setTimeout(updateCountdown, 1000, current_id);
 
 }
 

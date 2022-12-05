@@ -20,7 +20,8 @@ db = mongo_client["CSE312_Final_Project"]
 #     "password": str(" "), 
 #     "posts": List[{"post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
 #     "auctions": List[{"auction_id": "", "auction_item_name": "", "auction_item_description": "", "auction_item_image": "", "auction_current_price": "", "highest_bid_user": "", "auction_end_time": ""}],
-#     "purchases": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
+#     "purchases": List[{"post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}],
+#     "purchases_auction": List[{"auction_id": "", "auction_item_name": "", "auction_item_description": "", "auction_item_image": "", "auction_current_price": "", "highest_bid_user": "", "auction_end_time": ""}]
 #     "shopping_cart": List["post_id": "", "item_name": "", "item_description": "", "item_image": "", "item_price": ""}]
 #     "auth_token": bytes(" ")
 #   }
@@ -146,7 +147,7 @@ def sign_up():
         if (len(check_exist) == 0):
             # username not exists
             # Store username and password into the database
-            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "auctions": [], "purchases": [], "shopping_cart": []})
+            users_collection.insert_one({"username": get_username, "password": generate_password_hash(get_password), "posts": [], "auctions": [], "purchases": [], "purchases_auction": [], "shopping_cart": []})
             return redirect(url_for("login"))
 
         else:
@@ -671,9 +672,12 @@ def purchase_history():
             else:
                 # update html template
                 username = check_exist[0]['username']
+                # get user's "purchases" from database
                 purchases_list = check_exist[0]['purchases']
+                # get user's "purchases_auction" from database
+                purchases_auction_list = check_exist[0]['purchases_auction']
 
-                return render_template('purchase_history.html', current_user = username, purchases_list = purchases_list)
+                return render_template('purchase_history.html', current_user = username, purchases_list = purchases_list, purchases_auction_list = purchases_auction_list)
 
 
 # Auction Web Page When User loged in
@@ -978,6 +982,18 @@ def handle_count_down(dict):
     else:
         # update "auction_end_time" in auction collection
         auction_collection.update_one({'auction_id': int(dict['auction_id'])}, {"$set": {"auction_end_time" : 'Expired'}})
+        # add the corresponding auction into "highest_bid_user" purchase history
+        # using "auction_id" get the current_auction
+        current_auction = list(auction_collection.find({"auction_id": int(dict['auction_id'])}, {"_id": 0}))[0]
+        # get user's purchases auction history list using current_auction['highest_bid_user']
+        highest_bid_user_purchases = list(users_collection.find({"username": current_auction['highest_bid_user']}, {"_id": 0}))[0]['purchases']
+        # add current_auction into user's highest_bid_user_purchases
+        highest_bid_user_purchases.append(current_auction)
+        users_collection.update_one({'username': current_auction['highest_bid_user']}, {"$set": {"purchases_auction": highest_bid_user_purchases}})
+
+        # delete the auction from auction_collection
+        auction_collection.delete_one({'auction_id': int(dict['auction_id'])})
+        
         emit('countdown', {"auction_id": dict['auction_id'], "count_down": 'Expired'}, broadcast=True)
         
 
