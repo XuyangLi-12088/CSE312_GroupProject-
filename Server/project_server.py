@@ -676,6 +676,7 @@ def purchase_history():
                 purchases_list = check_exist[0]['purchases']
                 # get user's "purchases_auction" from database
                 purchases_auction_list = check_exist[0]['purchases_auction']
+                print(purchases_auction_list, flush=True)
 
                 return render_template('purchase_history.html', current_user = username, purchases_list = purchases_list, purchases_auction_list = purchases_auction_list)
 
@@ -984,9 +985,10 @@ def handle_count_down(dict):
         auction_collection.update_one({'auction_id': int(dict['auction_id'])}, {"$set": {"auction_end_time" : 'Expired'}})
         # add the corresponding auction into "highest_bid_user" purchase history
         # using "auction_id" get the current_auction
-        current_auction = list(auction_collection.find({"auction_id": int(dict['auction_id'])}, {"_id": 0}))[0]
+        current_auction = list(auction_collection.find({'auction_id': int(dict['auction_id'])}, {"_id": 0}))[0]
+        print("current_auction: " + str(current_auction))
         # get user's purchases auction history list using current_auction['highest_bid_user']
-        highest_bid_user_purchases = list(users_collection.find({"username": current_auction['highest_bid_user']}, {"_id": 0}))[0]['purchases']
+        highest_bid_user_purchases = list(users_collection.find({"username": current_auction['highest_bid_user']}, {"_id": 0}))[0]['purchases_auction']
         # add current_auction into user's highest_bid_user_purchases
         highest_bid_user_purchases.append(current_auction)
         users_collection.update_one({'username': current_auction['highest_bid_user']}, {"$set": {"purchases_auction": highest_bid_user_purchases}})
