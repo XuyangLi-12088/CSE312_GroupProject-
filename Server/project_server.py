@@ -874,7 +874,7 @@ def handle_auction(dict):
     print('received_bid: ' + str(dict["price"]), flush=True)
 
     error = ''
-    get_item_price = dict["price"]
+    get_item_price = escape_html(dict["price"])
     #print("current_bid" + get_item_price, flush=True)
 
     # check if the entered price is valid or not
