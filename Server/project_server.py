@@ -120,7 +120,7 @@ def sign_up():
     print("Request form: " + str(request.form), flush = True)
     print("Request method: " + str(request.method), flush = True)
     print("Request path: " + str(request.path), flush = True)
-    #print("Request header: " + str(request.headers), flush = True)
+    print("Request header: " + str(request.headers), flush = True)
 
     if (request.method == "POST"):
         error = ''
