@@ -9,7 +9,6 @@ import hashlib
 import os
 import time
 from helper_function import escape_html
-from secretFile import secret_key
 mongo_client = MongoClient("mongo")
 db = mongo_client["CSE312_Final_Project"] 
 
@@ -54,7 +53,7 @@ UPLOAD_FOLDER = 'static/uploads/'
 ALLOWED_EXTENSIONS = {'jpg', 'jpeg'}
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = secret_key
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 socketio = SocketIO(app, cors_allowed_origins="*")
 
