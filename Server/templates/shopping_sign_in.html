@@ -64,10 +64,10 @@
                 </div>
                 <div class="card-body">
                     <p class="image-text">Images:</p>
-                    <img src="/static/uploads/{{ auction['item_image'] }}" class="card-img-top" alt="..." style="width:350px;height:400px;">
+                    <img src="/static/uploads/{{ auction['item_image'] }}" class="card-img-top" id="{{ auction['auction_id'] }}" alt="..." style="width:350px;height:400px;" onload="get_countdown_by_id(this.id)">
                 </div>
                 <div class="card-body">
-                    <p class="Auction End Time">Auction End Time: {{ auction['auction_end_time'] }}</p>
+                    <p class="Auction End Time">Auction End Time: <b id="auction_end_time_{{ auction['auction_id'] }}">{{ auction['auction_end_time'] }}</b> </p>
                 </div>
                 <div class="card-body">
                     <p class="current bid">Current Bid: </p>
