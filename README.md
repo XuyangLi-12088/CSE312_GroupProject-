@@ -10,5 +10,5 @@ Group Members (by ubits): xli256, yiyuanwa, huandong, tvho
 * When runing "docker-compose up", make sure you are in the "Server" directory!
 Thank you!
 
-* "Session" Cookie is only used on the "Place Bid" button. If user delete the "Session" Cookie, then click "Place Bid", Item price will not be updated.
+* "session" Cookie is only used on the "Place Bid" button. If user delete the "Session" Cookie, then click "Place Bid", Item price will not be updated.
 * "auth_token" Cookie is used on rest of the Pages and features. If user delete the "auth_token" Cookie, then click on any buttons or links expect "Place Bid" button, it will redirect them to our "Login" Page.
