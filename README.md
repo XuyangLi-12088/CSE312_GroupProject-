@@ -4,6 +4,23 @@ Description: Making a storefront where users can buy and sell goods. The store w
 
 Group Members (by ubits): xli256, yiyuanwa, huandong, tvho
 
+# <----------------Helper Commands--------------------->
+
+# command that use flask run the server
+    # flask --app auth.py --debug run
+
+# command that use docker run the server
+    # • To run your app [and database]
+        # • docker-compose up
+    # • To run in detached mode
+        # • docker-compose up -d
+    # • To rebuild and restart the containers
+        # • docker-compose up --build --force-recreate
+    # • To restart the containers without rebuilding
+        # • docker-compose restart
+
+# <--------------------------------------------------->
+
 * When Click ON the "POST" Drop Down Button on our "Shopping Web Page", Please Click "↓"(Arrow Down) key on the KeyBoard to open the Drop Down Menu.
 <img width="1440" alt="Screen Shot 2022-12-09 at 16 40 04" src="https://user-images.githubusercontent.com/75594446/206800661-7bcccde0-2470-44e4-96ac-f7d916d4cd61.png">
 
